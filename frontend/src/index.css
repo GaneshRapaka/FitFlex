@@ -2,58 +2,78 @@
 
 @layer base {
   :root {
-    --primary: #f97316;
-    --primary-dark: #ea580c;
+    --primary: #0f0f11;
+    --accent: #c2410c; /* Warm terracotta/burnt sienna */
   }
 
   body {
-    background-color: #090a0d;
-    color: #e5e7eb;
+    background-color: #fafafa;
+    color: #18181b;
     font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
     margin: 0;
     padding: 0;
     overflow-x: hidden;
+    background-image: radial-gradient(#e4e4e7 1.2px, transparent 1.2px);
+    background-size: 24px 24px;
+    background-attachment: fixed;
   }
 
   h1, h2, h3, .font-heading {
     font-family: 'Oswald', sans-serif;
+    letter-spacing: -0.02em;
   }
 }
 
-/* Custom athletic scrollbars */
+/* Custom crisp scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #0d0f14;
+  background: #f4f4f5;
 }
 ::-webkit-scrollbar-thumb {
-  background: #232733;
+  background: #d4d4d8;
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #f97316;
+  background: #18181b;
 }
 
-/* Micro animations & utility classes */
-.glass-panel {
-  background: rgba(19, 22, 30, 0.75);
+/* Texture & tactile utility classes */
+.texture-paper {
+  background-color: #ffffff;
+  background-image: radial-gradient(#e5e7eb 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.texture-subtle-lines {
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 23px,
+    rgba(228, 228, 231, 0.45) 24px
+  );
+}
+
+.glass-panel-light {
+  background: rgba(255, 255, 255, 0.88);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(228, 228, 231, 0.85);
 }
 
-.text-gradient-athletic {
-  background: linear-gradient(135deg, #ffffff 40%, #94a3b8 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+.card-tactile {
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 6px 16px rgba(0, 0, 0, 0.02);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.text-gradient-fire {
-  background: linear-gradient(135deg, #fb923c 0%, #ea580c 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+.card-tactile:hover {
+  border-color: #a1a1aa;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
 }
 
 .no-scrollbar::-webkit-scrollbar {

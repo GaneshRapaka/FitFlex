@@ -20,12 +20,12 @@ const MainLayout = () => {
   const { currentRole, toastMessage } = useApp();
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#090a0d] text-gray-100 selection:bg-orange-500 selection:text-white antialiased">
+    <div className="min-h-screen flex flex-col bg-[#fafafa] text-neutral-900 selection:bg-neutral-900 selection:text-white antialiased">
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 bg-[#161822]/95 backdrop-blur-md text-white border border-orange-500/40 px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 text-xs font-bold animate-in fade-in slide-in-from-bottom-4 duration-200">
-          <div className="w-6 h-6 rounded-lg bg-orange-500/20 text-orange-400 flex items-center justify-center">
-            <Zap className="w-3.5 h-3.5 fill-orange-400" />
+        <div className="fixed bottom-6 right-6 z-50 bg-neutral-950/95 backdrop-blur-md text-white border border-neutral-800 px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 text-xs font-bold animate-in fade-in slide-in-from-bottom-4 duration-200">
+          <div className="w-6 h-6 rounded-lg bg-white/10 text-white flex items-center justify-center">
+            <Zap className="w-3.5 h-3.5 fill-white" />
           </div>
           <span className="tracking-wide">{toastMessage}</span>
         </div>
@@ -38,7 +38,7 @@ const MainLayout = () => {
       <Navbar />
 
       {/* Dynamic View based on User Role */}
-      <main className="flex-1">
+      <main className="flex-1 w-full">
         {currentRole === 'BUYER' && (
           <>
             <HeroBanner />
