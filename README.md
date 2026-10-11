@@ -2,6 +2,8 @@
 > **Local Gym Active Wear Marketplace — "Shop Local. Stay Active."**  
 > Inspired by the premium athletic aesthetic of [Fuaark](https://fuaark.com/) with an interactive **"Flat-Lay / Dress to On-Athlete Model Hover Reveal"** visual experience.
 
+![FitFlex Hyderabad Platform Preview](preview_full.png)
+
 ---
 
 ## 🌟 Key Highlights & Standout Features
