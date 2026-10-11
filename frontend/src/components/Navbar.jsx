@@ -105,14 +105,14 @@ const Navbar = () => {
             </div>
           </div>
 
-          {/* Desktop Navigation Links */}
+          {/* Desktop Navigation Links (Centered & Freely Spaced) */}
           {currentRole === 'BUYER' && (
-            <nav className="hidden xl:flex items-center gap-8 text-xs font-bold uppercase tracking-wider text-neutral-600">
+            <nav className="hidden lg:flex items-center gap-7 xl:gap-9 text-xs font-extrabold uppercase tracking-wider text-neutral-600">
               <button 
                 onClick={() => setFilters(prev => ({ ...prev, gender: 'all', category: 'all' }))}
-                className={`transition-colors hover:text-black pb-0.5 ${
+                className={`transition-colors hover:text-black py-1 ${
                   filters.gender === 'all' && filters.category === 'all' 
-                    ? 'text-black font-extrabold border-b-2 border-black' 
+                    ? 'text-black font-black border-b-2 border-black' 
                     : ''
                 }`}
               >
@@ -120,9 +120,9 @@ const Navbar = () => {
               </button>
               <button 
                 onClick={() => setFilters(prev => ({ ...prev, category: 'oversized-tees', gender: 'all' }))}
-                className={`transition-colors hover:text-black pb-0.5 ${
+                className={`transition-colors hover:text-black py-1 ${
                   filters.category === 'oversized-tees' 
-                    ? 'text-black font-extrabold border-b-2 border-black' 
+                    ? 'text-black font-black border-b-2 border-black' 
                     : ''
                 }`}
               >
@@ -130,9 +130,9 @@ const Navbar = () => {
               </button>
               <button 
                 onClick={() => setFilters(prev => ({ ...prev, category: 'active-dresses-sets', gender: 'all' }))}
-                className={`transition-colors hover:text-black pb-0.5 ${
+                className={`transition-colors hover:text-black py-1 ${
                   filters.category === 'active-dresses-sets' 
-                    ? 'text-black font-extrabold border-b-2 border-black' 
+                    ? 'text-black font-black border-b-2 border-black' 
                     : ''
                 }`}
               >
@@ -140,9 +140,9 @@ const Navbar = () => {
               </button>
               <button 
                 onClick={() => setFilters(prev => ({ ...prev, category: 'stringers-tanks', gender: 'all' }))}
-                className={`transition-colors hover:text-black pb-0.5 ${
+                className={`transition-colors hover:text-black py-1 ${
                   filters.category === 'stringers-tanks' 
-                    ? 'text-black font-extrabold border-b-2 border-black' 
+                    ? 'text-black font-black border-b-2 border-black' 
                     : ''
                 }`}
               >
@@ -150,9 +150,9 @@ const Navbar = () => {
               </button>
               <button 
                 onClick={() => setFilters(prev => ({ ...prev, category: 'joggers-shorts', gender: 'all' }))}
-                className={`transition-colors hover:text-black pb-0.5 ${
+                className={`transition-colors hover:text-black py-1 ${
                   filters.category === 'joggers-shorts' 
-                    ? 'text-black font-extrabold border-b-2 border-black' 
+                    ? 'text-black font-black border-b-2 border-black' 
                     : ''
                 }`}
               >
@@ -161,32 +161,47 @@ const Navbar = () => {
             </nav>
           )}
 
-          {/* Search Trigger Bar & Hyderabad Locality Selector */}
-          {currentRole === 'BUYER' && (
-            <div className="hidden md:flex items-center gap-3 flex-1 max-w-md lg:max-w-lg xl:max-w-xl">
-              {/* Search Trigger */}
-              <button
-                onClick={() => setIsSearchOpen(true)}
-                className="flex-1 bg-neutral-100 hover:bg-neutral-200/80 border border-neutral-200/90 rounded-full py-2.5 px-4 flex items-center justify-between text-xs text-neutral-600 transition"
-              >
-                <div className="flex items-center gap-2">
-                  <Search className="w-3.5 h-3.5 text-neutral-400" />
-                  <span className="truncate">Search 240 GSM drops, gym sets, stringers...</span>
-                </div>
-                <span className="text-[10px] bg-white border border-neutral-200 text-neutral-600 px-1.5 py-0.5 rounded font-mono shadow-xs">
-                  ⌘K
-                </span>
-              </button>
+          {/* Right Section: Compact Search, Locality Selector & Action Tools */}
+          <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
+            
+            {/* Compact Search Trigger (Reduced width by several cm since modal handles full search) */}
+            {currentRole === 'BUYER' && (
+              <>
+                <button
+                  onClick={() => setIsSearchOpen(true)}
+                  className="hidden md:flex w-40 lg:w-48 bg-neutral-100 hover:bg-neutral-200/80 border border-neutral-200/90 rounded-full py-2 px-3.5 items-center justify-between text-xs text-neutral-600 transition shadow-2xs group cursor-pointer"
+                  title="Search drops (⌘K)"
+                >
+                  <div className="flex items-center gap-2 truncate">
+                    <Search className="w-3.5 h-3.5 text-neutral-400 group-hover:text-black transition-colors shrink-0" />
+                    <span className="truncate text-[11px] font-medium text-neutral-500">Search drops...</span>
+                  </div>
+                  <span className="text-[10px] bg-white border border-neutral-200 text-neutral-500 px-1.5 py-0.2 rounded font-mono shadow-2xs shrink-0 ml-1">
+                    ⌘K
+                  </span>
+                </button>
 
-              {/* Locality Dropdown */}
-              <div className="relative shrink-0">
+                {/* Mobile Search Button */}
+                <button
+                  onClick={() => setIsSearchOpen(true)}
+                  className="md:hidden p-2.5 text-neutral-700 hover:text-black bg-neutral-100 hover:bg-neutral-200/80 border border-neutral-200 rounded-full transition"
+                  title="Search drops"
+                >
+                  <Search className="w-4 h-4" />
+                </button>
+              </>
+            )}
+
+            {/* Locality Dropdown */}
+            {currentRole === 'BUYER' && (
+              <div className="relative hidden lg:block shrink-0">
                 <select
                   value={filters.locality === 'all' ? 'All Hyderabad' : filters.locality}
                   onChange={(e) => {
                     const val = e.target.value;
                     setFilters(prev => ({ ...prev, locality: val === 'All Hyderabad' ? 'all' : val }));
                   }}
-                  className="bg-neutral-100 hover:bg-neutral-200/80 border border-neutral-200/90 text-[11px] text-neutral-800 font-semibold rounded-full py-2.5 pl-8 pr-4 appearance-none focus:outline-none focus:border-black cursor-pointer transition"
+                  className="bg-neutral-100 hover:bg-neutral-200/80 border border-neutral-200/90 text-[11px] text-neutral-800 font-semibold rounded-full py-2 pl-7 pr-3 appearance-none focus:outline-none focus:border-black cursor-pointer transition shadow-2xs"
                 >
                   {HYDERABAD_LOCALITIES.map((loc) => (
                     <option key={loc} value={loc} className="bg-white text-neutral-900">
@@ -194,23 +209,19 @@ const Navbar = () => {
                     </option>
                   ))}
                 </select>
-                <MapPin className="w-3.5 h-3.5 text-neutral-800 absolute left-2.5 top-3 pointer-events-none" />
+                <MapPin className="w-3.5 h-3.5 text-neutral-800 absolute left-2.5 top-2.5 pointer-events-none" />
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Action Tools */}
-          <div className="flex items-center gap-3 shrink-0">
-            
             {/* Live Delivery Tracker Pill */}
             {orders.length > 0 && (
               <button
                 onClick={handleTrackLastOrder}
-                className="flex items-center gap-1.5 text-xs font-bold text-neutral-800 hover:text-black bg-neutral-100 hover:bg-neutral-200/80 border border-neutral-200 px-3.5 py-2.5 rounded-full transition shadow-xs"
+                className="flex items-center gap-1.5 text-xs font-bold text-neutral-800 hover:text-black bg-neutral-100 hover:bg-neutral-200/80 border border-neutral-200 px-3.5 py-2 rounded-full transition shadow-xs"
                 title="Track Live Hyderabad Delivery"
               >
                 <Truck className="w-3.5 h-3.5 text-neutral-800" />
-                <span className="hidden sm:inline">Track</span>
+                <span className="hidden xl:inline">Track</span>
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
               </button>
             )}
@@ -357,7 +368,7 @@ const Navbar = () => {
             {/* Mobile Menu Toggle Button */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="xl:hidden p-2 text-neutral-700 hover:text-black rounded-lg bg-neutral-100 border border-neutral-200"
+              className="lg:hidden p-2 text-neutral-700 hover:text-black rounded-lg bg-neutral-100 border border-neutral-200"
             >
               {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
@@ -369,7 +380,7 @@ const Navbar = () => {
 
       {/* Mobile Drawer */}
       {isMobileMenuOpen && (
-        <div className="xl:hidden bg-white border-b border-neutral-200 p-4 space-y-4">
+        <div className="lg:hidden bg-white border-b border-neutral-200 p-4 space-y-4">
           <div className="flex items-center gap-2">
             <button
               onClick={() => {
