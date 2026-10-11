@@ -190,8 +190,8 @@ public class DataInitializer implements CommandLineRunner {
         p4.setOriginalPrice(new BigDecimal("2999"));
         p4.setDiscountPercent(40);
         p4.setGender("Women");
-        p4.setApparelImageUrl("https://images.unsplash.com/photo-1556905055-8f358a7a47b2?q=80&w=1000&auto=format&fit=crop"); // Flat lay matching sports set
-        p4.setModelImageUrl("https://images.unsplash.com/photo-1518611012118-696072aa579a?q=80&w=1000&auto=format&fit=crop"); // Fitness model wearing the set
+        p4.setApparelImageUrl("https://images.unsplash.com/photo-1506629082955-511b1aa562c8?q=80&w=1000&auto=format&fit=crop"); // Flat lay matching sports set
+        p4.setModelImageUrl("https://images.unsplash.com/photo-1540497077202-7c8a3999166f?q=80&w=1000&auto=format&fit=crop"); // Fitness model wearing the set
         p4.setFabricDetails("Seamless Ribbed Knit (Polyamide + Elastane)");
         p4.setFitType("Second-Skin Compression");
         p4.setBadge("LIMITED EDITION");
@@ -251,7 +251,7 @@ public class DataInitializer implements CommandLineRunner {
         p7.setDiscountPercent(35);
         p7.setGender("Unisex");
         p7.setApparelImageUrl("https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?q=80&w=1000&auto=format&fit=crop"); // Flat garment
-        p7.setModelImageUrl("https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1000&auto=format&fit=crop"); // Model wearing the shirt
+        p7.setModelImageUrl("https://images.unsplash.com/photo-1506152983158-b4a74a01c721?q=80&w=1000&auto=format&fit=crop"); // Model wearing the shirt
         p7.setFabricDetails("100% Bio-Washed Vintage Cotton");
         p7.setFitType("Relaxed Boxy Fit");
         p7.setBadge("HOT DEAL");

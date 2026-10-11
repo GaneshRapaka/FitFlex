@@ -10,26 +10,31 @@ import CartDrawer from './components/CartDrawer';
 import CheckoutModal from './components/CheckoutModal';
 import OrderTrackingModal from './components/OrderTrackingModal';
 import ProductDetailModal from './components/ProductDetailModal';
+import SearchModal from './components/SearchModal';
+import WishlistDrawer from './components/WishlistDrawer';
+import AuthModal from './components/AuthModal';
 import Footer from './components/Footer';
-import { Zap } from 'lucide-react';
+import { Zap, CheckCircle2 } from 'lucide-react';
 
 const MainLayout = () => {
   const { currentRole, toastMessage } = useApp();
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#0d0f12] text-gray-100 selection:bg-orange-500 selection:text-white">
+    <div className="min-h-screen flex flex-col bg-[#090a0d] text-gray-100 selection:bg-orange-500 selection:text-white antialiased">
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 bg-[#191c26] text-white border border-orange-500/50 px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-2.5 text-xs font-bold animate-bounce">
-          <Zap className="w-4 h-4 text-orange-400 fill-orange-400" />
-          <span>{toastMessage}</span>
+        <div className="fixed bottom-6 right-6 z-50 bg-[#161822]/95 backdrop-blur-md text-white border border-orange-500/40 px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 text-xs font-bold animate-in fade-in slide-in-from-bottom-4 duration-200">
+          <div className="w-6 h-6 rounded-lg bg-orange-500/20 text-orange-400 flex items-center justify-center">
+            <Zap className="w-3.5 h-3.5 fill-orange-400" />
+          </div>
+          <span className="tracking-wide">{toastMessage}</span>
         </div>
       )}
 
       {/* Top Announcement Bar */}
       <AnnouncementBar />
 
-      {/* Main Navbar */}
+      {/* Main Brand Navbar */}
       <Navbar />
 
       {/* Dynamic View based on User Role */}
@@ -47,12 +52,15 @@ const MainLayout = () => {
       </main>
 
       {/* Global Modals & Drawers */}
+      <SearchModal />
+      <WishlistDrawer />
+      <AuthModal />
       <CartDrawer />
       <CheckoutModal />
       <OrderTrackingModal />
       <ProductDetailModal />
 
-      {/* Footer */}
+      {/* Brand Footer */}
       <Footer />
     </div>
   );

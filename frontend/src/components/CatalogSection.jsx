@@ -6,10 +6,11 @@ import {
   Filter, 
   Sparkles, 
   MapPin, 
-  Layers, 
+  SlidersHorizontal,
   Flame, 
   RotateCcw,
-  Eye
+  Eye,
+  Check
 } from 'lucide-react';
 
 const CATEGORIES = [
@@ -22,11 +23,18 @@ const CATEGORIES = [
 ];
 
 const LOCALITIES = [
-  { slug: 'all', label: 'All Hyderabad' },
+  { slug: 'all', label: 'All Localities' },
   { slug: 'Banjara Hills', label: 'Banjara Hills' },
   { slug: 'Jubilee Hills', label: 'Jubilee Hills' },
   { slug: 'Madhapur', label: 'Madhapur' },
   { slug: 'Gachibowli', label: 'Gachibowli' },
+];
+
+const SORT_OPTIONS = [
+  { value: 'featured', label: 'Featured Drops' },
+  { value: 'price-low', label: 'Price: Low to High' },
+  { value: 'price-high', label: 'Price: High to Low' },
+  { value: 'rating', label: 'Highest Rated' },
 ];
 
 const CatalogSection = () => {
@@ -49,38 +57,46 @@ const CatalogSection = () => {
       category: 'all',
       gender: 'all',
       locality: 'all',
-      query: ''
+      query: '',
+      sortBy: 'featured'
     });
   };
 
   return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-8">
+    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
       
-      {/* Interactive Feature Announcement Banner */}
-      <div className="bg-gradient-to-r from-orange-500/15 via-amber-500/10 to-orange-500/15 border border-orange-500/30 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-orange-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-orange-500/30">
+      {/* Interactive Feature Announcement Card */}
+      <div className="bg-[#12141c] border border-orange-500/30 rounded-3xl p-4 sm:p-5 flex flex-col md:flex-row items-center justify-between gap-4 shadow-xl">
+        <div className="flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-2xl bg-orange-500/10 border border-orange-500/30 text-orange-400 flex items-center justify-center shrink-0">
             <Eye className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="text-sm font-black uppercase text-white tracking-wide flex items-center gap-2">
-              <span>Dual-Perspective Fit Experience</span>
-              <span className="text-[10px] bg-orange-500 text-white font-black px-2 py-0.5 rounded uppercase">
-                FEATURED
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-black uppercase text-white tracking-wider font-heading">
+                Dual-Perspective Fit Experience
+              </h3>
+              <span className="text-[10px] bg-orange-500 text-white font-extrabold px-2 py-0.5 rounded uppercase tracking-wider">
+                SIGNATURE
               </span>
-            </h3>
-            <p className="text-xs text-gray-300 mt-0.5">
-              At first you see the standalone dress / activewear flat lay. <strong className="text-orange-400">Hover your cursor (or tap toggle)</strong> over any piece to see how it looks on a real fitness model!
+            </div>
+            <p className="text-xs text-gray-300 mt-0.5 max-w-2xl">
+              By default, see the garment in clean flat-lay silhouette. <strong className="text-orange-400 font-semibold">Hover your cursor (or tap toggle)</strong> over any piece to see how it hangs on a real fitness athlete!
             </p>
           </div>
         </div>
+
+        <div className="flex items-center gap-2 text-xs font-semibold text-gray-400 shrink-0 bg-[#171a24] px-3 py-1.5 rounded-full border border-gray-800">
+          <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+          <span>Verified Local Hyderabad Garments</span>
+        </div>
       </div>
 
-      {/* Filter Toolbar */}
+      {/* Filter and Control Bar */}
       <div className="space-y-4">
         
-        {/* Category Tabs */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+        {/* Category Filter Tabs */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
           {CATEGORIES.map((cat) => (
             <button
               key={cat.slug}
@@ -88,7 +104,7 @@ const CatalogSection = () => {
               className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all uppercase tracking-wider ${
                 filters.category === cat.slug
                   ? 'bg-orange-500 text-white shadow-md shadow-orange-500/20'
-                  : 'bg-[#151720] text-gray-400 border border-gray-800 hover:text-white hover:border-gray-700'
+                  : 'bg-[#13151e] text-gray-400 border border-gray-800/80 hover:text-white hover:border-gray-700'
               }`}
             >
               {cat.label}
@@ -96,54 +112,90 @@ const CatalogSection = () => {
           ))}
         </div>
 
-        {/* Secondary Filter Row: Gender & Hyderabad Locality Pills */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-1 border-t border-gray-800/80">
+        {/* Secondary Toolbar: Gender, Locality, Sort, Reset */}
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-gray-800/80">
           
-          {/* Gender Filter */}
-          <div className="flex items-center gap-1.5 bg-[#14161f] p-1 rounded-xl border border-gray-800 text-xs font-bold">
-            {['all', 'Men', 'Women'].map((g) => (
-              <button
-                key={g}
-                onClick={() => setFilters(prev => ({ ...prev, gender: g }))}
-                className={`px-3 py-1 rounded-lg transition ${
-                  filters.gender === g
-                    ? 'bg-[#222633] text-orange-400 border border-orange-500/40 shadow-sm'
-                    : 'text-gray-400 hover:text-white'
-                }`}
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Gender Pills */}
+            <div className="flex items-center bg-[#13151e] border border-gray-800/80 p-1 rounded-xl text-xs font-semibold text-gray-400">
+              {['all', 'Men', 'Women'].map(gender => (
+                <button
+                  key={gender}
+                  onClick={() => setFilters(prev => ({ ...prev, gender }))}
+                  className={`px-3 py-1 rounded-lg transition uppercase text-[11px] font-bold ${
+                    filters.gender === gender 
+                      ? 'bg-gray-800 text-white shadow-sm' 
+                      : 'hover:text-white'
+                  }`}
+                >
+                  {gender === 'all' ? 'All Genders' : gender}
+                </button>
+              ))}
+            </div>
+
+            {/* Locality Selector Pill */}
+            <div className="relative">
+              <select
+                value={filters.locality === 'all' ? 'All Localities' : filters.locality}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setFilters(prev => ({ ...prev, locality: val === 'All Localities' ? 'all' : val }));
+                }}
+                className="bg-[#13151e] border border-gray-800/80 text-xs text-gray-200 font-semibold rounded-xl py-1.5 pl-7 pr-3 appearance-none focus:outline-none focus:border-orange-500 cursor-pointer"
               >
-                {g === 'all' ? 'All Genders' : g}
-              </button>
-            ))}
+                {LOCALITIES.map((loc) => (
+                  <option key={loc.slug} value={loc.label} className="bg-[#13151e]">
+                    {loc.label}
+                  </option>
+                ))}
+              </select>
+              <MapPin className="w-3.5 h-3.5 text-orange-400 absolute left-2.5 top-2.5 pointer-events-none" />
+            </div>
+
+            {/* Active search tag if query active */}
+            {filters.query && (
+              <div className="flex items-center gap-1.5 bg-orange-500/10 border border-orange-500/30 text-orange-300 text-xs px-2.5 py-1 rounded-xl">
+                <span>Search: "{filters.query}"</span>
+                <button 
+                  onClick={() => setFilters(prev => ({ ...prev, query: '' }))}
+                  className="hover:text-white font-bold ml-1"
+                >
+                  ✕
+                </button>
+              </div>
+            )}
           </div>
 
-          {/* Locality Quick Selector */}
-          <div className="flex items-center gap-1.5 overflow-x-auto">
-            <MapPin className="w-3.5 h-3.5 text-orange-400 shrink-0" />
-            {LOCALITIES.map((loc) => (
-              <button
-                key={loc.slug}
-                onClick={() => setFilters(prev => ({ ...prev, locality: loc.slug }))}
-                className={`text-[11px] px-2.5 py-1 rounded-lg border font-semibold transition ${
-                  filters.locality === loc.slug
-                    ? 'bg-orange-500/20 text-orange-300 border-orange-500/50'
-                    : 'bg-[#14161f] text-gray-400 border-gray-800 hover:text-white'
-                }`}
-              >
-                {loc.label}
-              </button>
-            ))}
-          </div>
+          {/* Sort By Dropdown & Count */}
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-gray-500 hidden sm:inline">
+              Showing <strong className="text-gray-300">{products.length}</strong> drops
+            </span>
 
-          {/* Result Count & Reset Button */}
-          <div className="flex items-center gap-3 text-xs text-gray-400 ml-auto">
-            <span>Showing <strong className="text-white">{products.length}</strong> Drops</span>
+            <div className="flex items-center gap-1.5 bg-[#13151e] border border-gray-800/80 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-gray-300">
+              <SlidersHorizontal className="w-3.5 h-3.5 text-gray-400" />
+              <select
+                value={filters.sortBy || 'featured'}
+                onChange={(e) => setFilters(prev => ({ ...prev, sortBy: e.target.value }))}
+                className="bg-transparent text-gray-200 focus:outline-none cursor-pointer text-xs"
+              >
+                {SORT_OPTIONS.map(opt => (
+                  <option key={opt.value} value={opt.value} className="bg-[#13151e] text-white">
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Reset Filters */}
             {(filters.category !== 'all' || filters.gender !== 'all' || filters.locality !== 'all' || filters.query) && (
               <button
                 onClick={resetFilters}
-                className="text-orange-400 hover:text-orange-300 flex items-center gap-1 text-[11px] font-bold"
+                className="flex items-center gap-1 text-xs text-gray-400 hover:text-orange-400 transition"
+                title="Reset all filters"
               >
-                <RotateCcw className="w-3 h-3" />
-                <span>Reset</span>
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Reset</span>
               </button>
             )}
           </div>
@@ -154,30 +206,32 @@ const CatalogSection = () => {
 
       {/* Product Grid */}
       {loading ? (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 py-12">
-          {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-            <div key={i} className="aspect-[3/4] bg-[#14161f] rounded-2xl animate-pulse" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[1, 2, 3, 4, 5, 6, 7, 8].map(n => (
+            <div key={n} className="bg-[#111319] rounded-2xl border border-gray-800/60 aspect-[3/4] animate-pulse" />
           ))}
         </div>
-      ) : products.length === 0 ? (
-        <div className="text-center py-20 bg-[#13151b] rounded-3xl border border-gray-800 space-y-4">
-          <Layers className="w-12 h-12 text-gray-600 mx-auto" />
-          <h3 className="text-lg font-black uppercase text-white">No Drops Match Your Filters</h3>
+      ) : products.length > 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {products.map(product => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
+      ) : (
+        <div className="py-20 text-center space-y-4 bg-[#111319] border border-gray-800/80 rounded-3xl p-8">
+          <div className="w-16 h-16 rounded-2xl bg-gray-900 border border-gray-800 text-gray-500 mx-auto flex items-center justify-center">
+            <Filter className="w-8 h-8 stroke-1" />
+          </div>
+          <h3 className="text-base font-bold text-white uppercase tracking-tight">No Activewear Found</h3>
           <p className="text-xs text-gray-400 max-w-sm mx-auto">
-            Try switching the category or Hyderabad locality filter to view other activewear gear.
+            No drops match the current filters. Try selecting a different category or clearing your locality filter.
           </p>
           <button
             onClick={resetFilters}
-            className="bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs uppercase px-5 py-2.5 rounded-xl transition"
+            className="bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold uppercase px-4 py-2.5 rounded-xl transition"
           >
-            Reset Filters
+            Clear All Filters
           </button>
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-          {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
         </div>
       )}
 
