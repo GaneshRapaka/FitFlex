@@ -1,0 +1,14 @@
+# System & IDE files
+.DS_Store
+Thumbs.db
+*.log
+
+# Build artifacts
+backend/target/
+frontend/dist/
+frontend/node_modules/
+frontend/.vite/
+
+# Temporary captures
+preview_full_page.png
+preview_widescreen.png
