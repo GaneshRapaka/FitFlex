@@ -15,14 +15,14 @@ const HeroBanner = () => {
       {/* Subtle Architectural Grid Lines Texture */}
       <div className="absolute inset-0 texture-subtle-lines pointer-events-none opacity-40" />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+      <div className="w-full max-w-[1760px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 xl:gap-20 items-center">
           
           {/* Left Hero Content */}
           <div className="lg:col-span-7 space-y-7 text-center lg:text-left">
             
             {/* Tagline Badge */}
-            <div className="inline-flex items-center gap-2 bg-neutral-100 border border-neutral-300 px-4 py-1.5 rounded-full text-[11px] font-extrabold text-neutral-900 uppercase tracking-widest shadow-2xs">
+            <div className="inline-flex items-center gap-2 bg-neutral-100 border border-neutral-300 px-4 py-1.5 rounded-full text-[11px] font-extrabold text-neutral-950 uppercase tracking-widest shadow-2xs">
               <span className="w-2 h-2 rounded-full bg-neutral-950" />
               <span>HYDERABAD LOCAL ACTIVEWEAR MARKETPLACE</span>
             </div>
@@ -34,13 +34,13 @@ const HeroBanner = () => {
             </h1>
 
             {/* Description */}
-            <p className="text-neutral-600 text-sm sm:text-base max-w-xl mx-auto lg:mx-0 font-normal leading-relaxed">
+            <p className="text-neutral-600 text-sm sm:text-base lg:text-lg max-w-2xl mx-auto lg:mx-0 font-normal leading-relaxed">
               Curated athletic drops directly from verified fitness merchants in <strong className="text-neutral-950">Banjara Hills, Jubilee Hills, and Madhapur</strong>. 
               Featuring our signature <strong className="text-neutral-950 font-semibold">"Flat-Lay ↔ Athlete Fit"</strong> live comparison, same-day bike dispatch, and 100% Cash on Delivery.
             </p>
 
             {/* Value Pillars */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3.5 pt-1 max-w-xl mx-auto lg:mx-0">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3.5 pt-1 max-w-2xl mx-auto lg:mx-0">
               <div className="bg-white border border-neutral-200 rounded-2xl p-4 text-left shadow-xs">
                 <div className="flex items-center gap-1.5 text-xs font-black text-neutral-950 mb-0.5">
                   <Zap className="w-3.5 h-3.5 text-neutral-900" />

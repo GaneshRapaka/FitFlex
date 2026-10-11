@@ -53,7 +53,7 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+    <div className="w-full max-w-[1760px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 py-10 space-y-8">
       
       {/* Admin Header */}
       <div className="bg-gradient-to-r from-[#171922] via-[#14161f] to-[#12141c] p-6 sm:p-8 rounded-3xl border border-gray-800 shadow-xl flex items-center justify-between">

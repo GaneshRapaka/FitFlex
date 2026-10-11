@@ -3,8 +3,8 @@ import { Zap, ShieldCheck, MapPin, Sparkles } from 'lucide-react';
 
 const AnnouncementBar = () => {
   return (
-    <div className="bg-neutral-950 border-b border-neutral-800 text-neutral-300 py-2.5 px-4 text-xs tracking-wider">
-      <div className="max-w-7xl mx-auto flex items-center justify-between text-[11px] font-medium">
+    <div className="w-full bg-neutral-950 border-b border-neutral-800 text-neutral-300 py-2.5 px-4 sm:px-8 lg:px-12 text-xs tracking-wider">
+      <div className="w-full max-w-[1760px] mx-auto flex items-center justify-between text-[11px] font-medium">
         
         {/* Left: Dispatch Hubs */}
         <div className="hidden md:flex items-center gap-2 text-neutral-400">
@@ -13,7 +13,7 @@ const AnnouncementBar = () => {
             <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
           </span>
           <span className="font-semibold text-neutral-200">Hyderabad Local Dispatch:</span>
-          <span>Banjara Hills & Jubilee Hills Active</span>
+          <span>Banjara Hills & Jubilee Hills Hubs Active</span>
         </div>
 
         {/* Center: Main USP */}

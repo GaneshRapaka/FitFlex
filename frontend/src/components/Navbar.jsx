@@ -7,15 +7,14 @@ import {
   MapPin, 
   Truck, 
   User, 
-  Heart,
-  ChevronDown,
+  Heart, 
+  ChevronDown, 
   Store, 
   ShieldAlert, 
   Menu, 
-  X,
-  Sparkles,
-  ArrowRight,
-  LogOut
+  X, 
+  Sparkles, 
+  ArrowRight 
 } from 'lucide-react';
 
 const HYDERABAD_LOCALITIES = [
@@ -58,13 +57,13 @@ const Navbar = () => {
   };
 
   return (
-    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-neutral-200/90 shadow-[0_1px_4px_rgba(0,0,0,0.03)]">
+    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-neutral-200/90 shadow-[0_1px_4px_rgba(0,0,0,0.03)] w-full">
       
       {/* Role Banner if in Seller or Admin mode */}
       {currentRole !== 'BUYER' && (
-        <div className="bg-neutral-100 border-b border-neutral-200 py-2 px-4 text-xs flex items-center justify-between text-neutral-800">
-          <div className="flex items-center gap-2 font-bold max-w-7xl mx-auto w-full">
-            <span className="w-2 h-2 rounded-full bg-neutral-900 animate-pulse" />
+        <div className="bg-neutral-100 border-b border-neutral-200 py-2 px-4 sm:px-8 lg:px-12 text-xs flex items-center justify-between text-neutral-800">
+          <div className="flex items-center gap-2 font-bold max-w-[1760px] mx-auto w-full">
+            <span className="w-2 h-2 rounded-full bg-neutral-950 animate-pulse" />
             <span>Active Portal: {currentRole === 'SELLER' ? 'Merchant Dashboard (IronCore Banjara Hills)' : 'Platform Administration Operations HQ'}</span>
             <button
               onClick={() => switchRole('BUYER')}
@@ -77,12 +76,12 @@ const Navbar = () => {
         </div>
       )}
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20 gap-4">
+      <div className="w-full max-w-[1760px] mx-auto px-4 sm:px-8 lg:px-12">
+        <div className="flex items-center justify-between h-20 gap-6">
           
           {/* Brand Logo */}
           <div 
-            className="flex items-center gap-3 cursor-pointer select-none group" 
+            className="flex items-center gap-3 cursor-pointer select-none group shrink-0" 
             onClick={() => {
               if (currentRole !== 'BUYER') switchRole('BUYER');
               setFilters(prev => ({ ...prev, category: 'all', gender: 'all', locality: 'all', query: '' }));
@@ -108,7 +107,7 @@ const Navbar = () => {
 
           {/* Desktop Navigation Links */}
           {currentRole === 'BUYER' && (
-            <nav className="hidden xl:flex items-center gap-7 text-xs font-bold uppercase tracking-wider text-neutral-600">
+            <nav className="hidden xl:flex items-center gap-8 text-xs font-bold uppercase tracking-wider text-neutral-600">
               <button 
                 onClick={() => setFilters(prev => ({ ...prev, gender: 'all', category: 'all' }))}
                 className={`transition-colors hover:text-black pb-0.5 ${
@@ -164,15 +163,15 @@ const Navbar = () => {
 
           {/* Search Trigger Bar & Hyderabad Locality Selector */}
           {currentRole === 'BUYER' && (
-            <div className="hidden md:flex items-center gap-2.5 flex-1 max-w-sm lg:max-w-md">
+            <div className="hidden md:flex items-center gap-3 flex-1 max-w-md lg:max-w-lg xl:max-w-xl">
               {/* Search Trigger */}
               <button
                 onClick={() => setIsSearchOpen(true)}
-                className="flex-1 bg-neutral-100 hover:bg-neutral-200/80 border border-neutral-200/90 rounded-full py-2 px-3.5 flex items-center justify-between text-xs text-neutral-600 transition"
+                className="flex-1 bg-neutral-100 hover:bg-neutral-200/80 border border-neutral-200/90 rounded-full py-2.5 px-4 flex items-center justify-between text-xs text-neutral-600 transition"
               >
                 <div className="flex items-center gap-2">
                   <Search className="w-3.5 h-3.5 text-neutral-400" />
-                  <span className="truncate">Search 240 GSM drops, gym sets...</span>
+                  <span className="truncate">Search 240 GSM drops, gym sets, stringers...</span>
                 </div>
                 <span className="text-[10px] bg-white border border-neutral-200 text-neutral-600 px-1.5 py-0.5 rounded font-mono shadow-xs">
                   ⌘K
@@ -180,14 +179,14 @@ const Navbar = () => {
               </button>
 
               {/* Locality Dropdown */}
-              <div className="relative">
+              <div className="relative shrink-0">
                 <select
                   value={filters.locality === 'all' ? 'All Hyderabad' : filters.locality}
                   onChange={(e) => {
                     const val = e.target.value;
                     setFilters(prev => ({ ...prev, locality: val === 'All Hyderabad' ? 'all' : val }));
                   }}
-                  className="bg-neutral-100 hover:bg-neutral-200/80 border border-neutral-200/90 text-[11px] text-neutral-800 font-semibold rounded-full py-2 pl-7 pr-3 appearance-none focus:outline-none focus:border-black cursor-pointer transition"
+                  className="bg-neutral-100 hover:bg-neutral-200/80 border border-neutral-200/90 text-[11px] text-neutral-800 font-semibold rounded-full py-2.5 pl-8 pr-4 appearance-none focus:outline-none focus:border-black cursor-pointer transition"
                 >
                   {HYDERABAD_LOCALITIES.map((loc) => (
                     <option key={loc} value={loc} className="bg-white text-neutral-900">
@@ -195,19 +194,19 @@ const Navbar = () => {
                     </option>
                   ))}
                 </select>
-                <MapPin className="w-3 h-3 text-neutral-800 absolute left-2.5 top-2.5 pointer-events-none" />
+                <MapPin className="w-3.5 h-3.5 text-neutral-800 absolute left-2.5 top-3 pointer-events-none" />
               </div>
             </div>
           )}
 
           {/* Action Tools */}
-          <div className="flex items-center gap-2.5 sm:gap-3">
+          <div className="flex items-center gap-3 shrink-0">
             
             {/* Live Delivery Tracker Pill */}
             {orders.length > 0 && (
               <button
                 onClick={handleTrackLastOrder}
-                className="flex items-center gap-1.5 text-xs font-bold text-neutral-800 hover:text-black bg-neutral-100 hover:bg-neutral-200/80 border border-neutral-200 px-3 py-2 rounded-full transition shadow-xs"
+                className="flex items-center gap-1.5 text-xs font-bold text-neutral-800 hover:text-black bg-neutral-100 hover:bg-neutral-200/80 border border-neutral-200 px-3.5 py-2.5 rounded-full transition shadow-xs"
                 title="Track Live Hyderabad Delivery"
               >
                 <Truck className="w-3.5 h-3.5 text-neutral-800" />
@@ -233,7 +232,7 @@ const Navbar = () => {
             {/* Cart Drawer Trigger */}
             <button
               onClick={() => setIsCartOpen(true)}
-              className="relative bg-neutral-950 hover:bg-neutral-850 text-white font-bold p-2.5 sm:px-4 sm:py-2 rounded-full transition flex items-center gap-2 shadow-md active:scale-95"
+              className="relative bg-neutral-950 hover:bg-neutral-850 text-white font-bold p-2.5 sm:px-4 sm:py-2.5 rounded-full transition flex items-center gap-2 shadow-md active:scale-95"
             >
               <ShoppingBag className="w-4 h-4" />
               <span className="hidden sm:inline text-xs uppercase tracking-wider font-extrabold">Cart</span>
@@ -248,7 +247,7 @@ const Navbar = () => {
             <div className="relative">
               <button
                 onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
-                className="flex items-center gap-2 bg-neutral-100 hover:bg-neutral-200/80 border border-neutral-200 p-1.5 sm:px-3 sm:py-1.5 rounded-full text-xs font-semibold text-neutral-800 transition"
+                className="flex items-center gap-2 bg-neutral-100 hover:bg-neutral-200/80 border border-neutral-200 p-1.5 sm:px-3 sm:py-2 rounded-full text-xs font-semibold text-neutral-800 transition"
               >
                 <div className="w-7 h-7 rounded-full bg-neutral-950 flex items-center justify-center text-white font-black text-xs">
                   {currentUser.name ? currentUser.name.charAt(0) : 'U'}

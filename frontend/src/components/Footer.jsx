@@ -13,7 +13,7 @@ const Footer = () => {
 
   return (
     <footer className="bg-neutral-100 border-t border-neutral-200 text-neutral-600 text-xs mt-20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
+      <div className="w-full max-w-[1760px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 py-14">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
           
           {/* Brand Col */}

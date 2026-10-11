@@ -63,10 +63,10 @@ const CatalogSection = () => {
   };
 
   return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-8 w-full">
+    <section className="w-full max-w-[1760px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 py-12 space-y-8">
       
       {/* Interactive Feature Announcement Card */}
-      <div className="bg-white border border-neutral-200/90 rounded-3xl p-5 sm:p-6 flex flex-col md:flex-row items-center justify-between gap-5 shadow-xs card-tactile">
+      <div className="bg-white border border-neutral-200/90 rounded-3xl p-5 sm:p-6 lg:p-7 flex flex-col md:flex-row items-center justify-between gap-5 shadow-xs card-tactile">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-2xl bg-neutral-950 text-white flex items-center justify-center shrink-0 shadow-sm">
             <Eye className="w-5 h-5 stroke-[2.5]" />
@@ -206,13 +206,13 @@ const CatalogSection = () => {
 
       {/* Product Grid */}
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 gap-6 xl:gap-8">
           {[1, 2, 3, 4, 5, 6, 7, 8].map(n => (
             <div key={n} className="bg-white rounded-2xl border border-neutral-200 aspect-[3/4] animate-pulse" />
           ))}
         </div>
       ) : products.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 gap-6 xl:gap-8">
           {products.map(product => (
             <ProductCard key={product.id} product={product} />
           ))}
