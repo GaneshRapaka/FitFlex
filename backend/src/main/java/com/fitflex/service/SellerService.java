@@ -71,9 +71,26 @@ public class SellerService {
 
     @Transactional
     public ProductVariant updateVariantStock(Long variantId, int newQuantity) {
+        return updateVariantStock(variantId, newQuantity, null);
+    }
+
+    @Transactional
+    public ProductVariant updateVariantStock(Long variantId, int newQuantity, String sellerEmail) {
         ProductVariant variant = variantRepository.findById(variantId)
                 .orElseThrow(() -> new IllegalArgumentException("Variant not found"));
-        variant.setStockQuantity(newQuantity);
+        if (sellerEmail != null) {
+            User caller = userRepository.findByEmail(sellerEmail)
+                    .orElseThrow(() -> new IllegalArgumentException("Seller not found: " + sellerEmail));
+            if (caller.getRole() != Role.ROLE_ADMIN) {
+                Store sellerStore = storeRepository.findBySeller(caller)
+                        .orElseThrow(() -> new IllegalArgumentException("Store not found for seller"));
+                if (variant.getProduct() == null || variant.getProduct().getStore() == null
+                        || !variant.getProduct().getStore().getId().equals(sellerStore.getId())) {
+                    throw new org.springframework.security.access.AccessDeniedException("Unauthorized to modify inventory of another store's product");
+                }
+            }
+        }
+        variant.setStockQuantity(Math.max(0, newQuantity));
         return variantRepository.save(variant);
     }
 }

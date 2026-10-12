@@ -266,12 +266,35 @@ export const AppProvider = ({ children }) => {
   const isWishlisted = (productId) => wishlist.includes(productId);
 
   // Order placement
-  const placeOrder = (checkoutData) => {
-    const newOrderNumber = `FF-HYD-${Math.floor(100000 + Math.random() * 900000)}`;
-    const newTrackingCode = `HYD-EXP-${Math.floor(100000 + Math.random() * 900000)}`;
+  const placeOrder = async (checkoutData) => {
+    let backendOrder = null;
+    try {
+      const payload = {
+        buyerName: checkoutData.buyerName || currentUser.name,
+        buyerPhone: checkoutData.buyerPhone || currentUser.phone,
+        deliveryAddress: checkoutData.deliveryAddress,
+        deliveryLocality: checkoutData.deliveryLocality || 'Madhapur',
+        deliveryPincode: checkoutData.deliveryPincode || '500081',
+        deliveryNotes: checkoutData.deliveryNotes || '',
+        items: cart.map(ci => ({
+          productId: ci.product.id,
+          size: ci.selectedSize,
+          quantity: ci.quantity
+        }))
+      };
+      const res = await api.post('/orders/checkout', payload);
+      if (res.data) {
+        backendOrder = res.data;
+      }
+    } catch (err) {
+      console.warn('Backend order checkout fallback to local order tracking:', err);
+    }
+
+    const newOrderNumber = backendOrder?.orderNumber || `FF-HYD-${Math.floor(100000 + Math.random() * 900000)}`;
+    const newTrackingCode = backendOrder?.deliveryTracking?.trackingCode || `HYD-EXP-${Math.floor(100000 + Math.random() * 900000)}`;
 
     const newOrder = {
-      id: Date.now(),
+      id: backendOrder?.id || Date.now(),
       orderNumber: newOrderNumber,
       buyerName: checkoutData.buyerName || currentUser.name,
       buyerPhone: checkoutData.buyerPhone || currentUser.phone,

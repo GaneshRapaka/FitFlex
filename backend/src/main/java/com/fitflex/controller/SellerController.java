@@ -45,7 +45,10 @@ public class SellerController {
     }
 
     @PutMapping("/inventory/{variantId}")
-    public ResponseEntity<ProductVariant> updateStock(@PathVariable Long variantId, @RequestParam int quantity) {
-        return ResponseEntity.ok(sellerService.updateVariantStock(variantId, quantity));
+    public ResponseEntity<ProductVariant> updateStock(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable Long variantId,
+            @RequestParam int quantity) {
+        return ResponseEntity.ok(sellerService.updateVariantStock(variantId, quantity, userDetails.getUsername()));
     }
 }

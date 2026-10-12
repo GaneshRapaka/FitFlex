@@ -106,10 +106,16 @@ public class ProductService {
     }
 
     @Transactional
-    public void deleteProduct(Long id, String sellerEmail) {
+    public void deleteProduct(Long id, String callerEmail) {
         Product product = getProductById(id);
-        if (!product.getStore().getSeller().getEmail().equals(sellerEmail)) {
-            throw new IllegalArgumentException("Unauthorized: You do not own this product.");
+        User caller = userRepository.findByEmail(callerEmail)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + callerEmail));
+        boolean isOwner = product.getStore() != null && product.getStore().getSeller() != null
+                && product.getStore().getSeller().getEmail().equals(callerEmail);
+        boolean isAdmin = caller.getRole() == Role.ROLE_ADMIN;
+
+        if (!isOwner && !isAdmin) {
+            throw new org.springframework.security.access.AccessDeniedException("Unauthorized: You do not own this product.");
         }
         product.setActive(false);
         productRepository.save(product);

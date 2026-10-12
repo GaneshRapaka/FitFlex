@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { 
   X, 
@@ -33,6 +33,12 @@ const ProductDetailModal = () => {
   const [showSizeGuide, setShowSizeGuide] = useState(false);
   const [pincode, setPincode] = useState('500081');
   const [pincodeChecked, setPincodeChecked] = useState(true);
+
+  useEffect(() => {
+    if (quickViewProduct?.variants?.length) {
+      setSelectedSize(quickViewProduct.variants[0]?.size || 'M');
+    }
+  }, [quickViewProduct]);
 
   if (!quickViewProduct) return null;
 

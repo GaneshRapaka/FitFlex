@@ -470,7 +470,7 @@ export const fetchProducts = async (filters = {}) => {
     if (filters.query) params.append('query', filters.query);
 
     const response = await api.get(`/products?${params.toString()}`);
-    if (response.data && response.data.length > 0) {
+    if (Array.isArray(response.data)) {
       return response.data;
     }
     return INITIAL_PRODUCTS;

@@ -56,7 +56,7 @@ public class OrderService {
 
         Order order = new Order();
         order.setBuyer(buyer);
-        order.setOrderNumber("FF-HYD-" + (100000 + new Random().nextInt(900000)));
+        order.setOrderNumber("FF-HYD-" + (System.currentTimeMillis() % 10000000) + "-" + (1000 + new Random().nextInt(9000)));
         order.setBuyerName(request.getBuyerName() != null ? request.getBuyerName() : buyer.getName());
         order.setBuyerPhone(request.getBuyerPhone() != null ? request.getBuyerPhone() : buyer.getPhone());
         order.setDeliveryAddress(request.getDeliveryAddress());
@@ -76,11 +76,14 @@ public class OrderService {
                 BigDecimal subTotal = itemPrice.multiply(BigDecimal.valueOf(ci.getQuantity()));
                 totalAmount = totalAmount.add(subTotal);
 
-                // Reduce inventory stock
+                // Reduce inventory stock with strict availability validation
                 Optional<ProductVariant> variantOpt = variantRepository.findByProductIdAndSize(ci.getProduct().getId(), ci.getSelectedSize());
                 if (variantOpt.isPresent()) {
                     ProductVariant v = variantOpt.get();
-                    v.setStockQuantity(Math.max(0, v.getStockQuantity() - ci.getQuantity()));
+                    if (v.getStockQuantity() < ci.getQuantity()) {
+                        throw new IllegalStateException("Insufficient stock for " + ci.getProduct().getName() + " (Size: " + ci.getSelectedSize() + "). Available: " + v.getStockQuantity());
+                    }
+                    v.setStockQuantity(v.getStockQuantity() - ci.getQuantity());
                     variantRepository.save(v);
                 }
 
@@ -102,7 +105,10 @@ public class OrderService {
                 Optional<ProductVariant> variantOpt = variantRepository.findByProductIdAndSize(product.getId(), itemReq.getSize());
                 if (variantOpt.isPresent()) {
                     ProductVariant v = variantOpt.get();
-                    v.setStockQuantity(Math.max(0, v.getStockQuantity() - itemReq.getQuantity()));
+                    if (v.getStockQuantity() < itemReq.getQuantity()) {
+                        throw new IllegalStateException("Insufficient stock for " + product.getName() + " (Size: " + itemReq.getSize() + "). Available: " + v.getStockQuantity());
+                    }
+                    v.setStockQuantity(v.getStockQuantity() - itemReq.getQuantity());
                     variantRepository.save(v);
                 }
 
@@ -124,7 +130,7 @@ public class OrderService {
         // Create Delivery Tracking
         DeliveryTracking tracking = new DeliveryTracking();
         tracking.setOrder(order);
-        tracking.setTrackingCode("HYD-EXP-" + (100000 + new Random().nextInt(900000)));
+        tracking.setTrackingCode("HYD-EXP-" + (System.currentTimeMillis() % 10000000) + "-" + (1000 + new Random().nextInt(9000)));
         tracking.setCourierPartner("FitFlex Local Express (Hyderabad Fleet)");
         tracking.setEstimatedDelivery(LocalDateTime.now().plusHours(24));
         tracking.setCurrentStatus("SELLER_PROCESSING");
@@ -135,8 +141,8 @@ public class OrderService {
         // Create Seller Settlement Record
         if (store != null) {
             BigDecimal feePercent = BigDecimal.valueOf(0.085); // 8.5% platform fee
-            BigDecimal platformFee = totalAmount.multiply(feePercent);
-            BigDecimal netPayout = totalAmount.subtract(platformFee);
+            BigDecimal platformFee = totalAmount.multiply(feePercent).setScale(2, java.math.RoundingMode.HALF_UP);
+            BigDecimal netPayout = totalAmount.subtract(platformFee).setScale(2, java.math.RoundingMode.HALF_UP);
             Settlement settlement = new Settlement(store, order, totalAmount, platformFee, netPayout);
             settlementRepository.save(settlement);
         }
@@ -155,13 +161,35 @@ public class OrderService {
     }
 
     public Order getOrderById(Long orderId) {
-        return orderRepository.findById(orderId)
+        return getOrderById(orderId, null);
+    }
+
+    public Order getOrderById(Long orderId, String callerEmail) {
+        Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("Order not found with id: " + orderId));
+        if (callerEmail != null) {
+            User caller = userRepository.findByEmail(callerEmail)
+                    .orElseThrow(() -> new IllegalArgumentException("User not found: " + callerEmail));
+            boolean isBuyer = order.getBuyer() != null && order.getBuyer().getId().equals(caller.getId());
+            boolean isSeller = order.getStore() != null && order.getStore().getSeller() != null
+                    && order.getStore().getSeller().getId().equals(caller.getId());
+            boolean isAdmin = caller.getRole() == com.fitflex.model.Role.ROLE_ADMIN;
+
+            if (!isBuyer && !isSeller && !isAdmin) {
+                throw new org.springframework.security.access.AccessDeniedException("Unauthorized to view order details for order #" + orderId);
+            }
+        }
+        return order;
     }
 
     @Transactional
     public Order updateOrderStatus(Long orderId, String newStatus) {
-        Order order = getOrderById(orderId);
+        return updateOrderStatus(orderId, newStatus, null);
+    }
+
+    @Transactional
+    public Order updateOrderStatus(Long orderId, String newStatus, String callerEmail) {
+        Order order = getOrderById(orderId, callerEmail);
         order.setOrderStatus(newStatus);
         order.setUpdatedAt(LocalDateTime.now());
 

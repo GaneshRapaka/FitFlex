@@ -35,13 +35,19 @@ public class OrderController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Order> getOrderById(@PathVariable Long id) {
-        return ResponseEntity.ok(orderService.getOrderById(id));
+    public ResponseEntity<Order> getOrderById(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable Long id) {
+        String username = userDetails != null ? userDetails.getUsername() : null;
+        return ResponseEntity.ok(orderService.getOrderById(id, username));
     }
 
     @PutMapping("/{id}/status")
     @PreAuthorize("hasAuthority('ROLE_SELLER') or hasAuthority('ROLE_ADMIN')")
-    public ResponseEntity<Order> updateOrderStatus(@PathVariable Long id, @RequestParam String status) {
-        return ResponseEntity.ok(orderService.updateOrderStatus(id, status));
+    public ResponseEntity<Order> updateOrderStatus(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable Long id,
+            @RequestParam String status) {
+        return ResponseEntity.ok(orderService.updateOrderStatus(id, status, userDetails.getUsername()));
     }
 }

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
+import api from '../api/client';
 import { X, Lock, Mail, User, ShieldCheck, Store, ArrowRight, CheckCircle2 } from 'lucide-react';
 
 const AuthModal = () => {
@@ -21,12 +22,50 @@ const AuthModal = () => {
 
   if (!isAuthModalOpen) return null;
 
-  const handleCustomLogin = (e) => {
+  const handleCustomLogin = async (e) => {
     e.preventDefault();
     if (!email) {
       showToast('Please enter your email.');
       return;
     }
+    try {
+      if (authMode === 'register') {
+        const res = await api.post('/auth/register', {
+          name: name || email.split('@')[0],
+          email,
+          password: password || 'password123',
+          role: 'ROLE_BUYER',
+          locality: locality || 'Madhapur',
+          address: `Hyderabad, ${locality}`
+        });
+        if (res.data?.token) {
+          localStorage.setItem('fitflex_token', res.data.token);
+          setCurrentUser(res.data);
+          switchRole('BUYER');
+          showToast(`Account created! Welcome, ${res.data.name}!`);
+          setIsAuthModalOpen(false);
+          return;
+        }
+      } else {
+        const res = await api.post('/auth/login', {
+          email,
+          password: password || 'password123'
+        });
+        if (res.data?.token) {
+          localStorage.setItem('fitflex_token', res.data.token);
+          setCurrentUser(res.data);
+          const roleSlug = res.data.role === 'ROLE_SELLER' ? 'SELLER' : res.data.role === 'ROLE_ADMIN' ? 'ADMIN' : 'BUYER';
+          switchRole(roleSlug);
+          showToast(`Welcome back, ${res.data.name}!`);
+          setIsAuthModalOpen(false);
+          return;
+        }
+      }
+    } catch (err) {
+      console.warn('Backend authentication fallback to local session:', err);
+    }
+
+    // Graceful offline fallback
     setCurrentUser({
       id: Date.now(),
       name: name || email.split('@')[0],
@@ -37,11 +76,28 @@ const AuthModal = () => {
       address: `Hyderabad, ${locality}`
     });
     switchRole('BUYER');
-    showToast(`Welcome back, ${name || email.split('@')[0]}!`);
+    showToast(`Welcome, ${name || email.split('@')[0]}!`);
     setIsAuthModalOpen(false);
   };
 
-  const handleSelectDemoAccount = (role) => {
+  const handleSelectDemoAccount = async (role) => {
+    const creds = {
+      BUYER: { email: 'rahul@fitflex.hyd', password: 'password123' },
+      SELLER: { email: 'ironcore@fitflex.hyd', password: 'password123' },
+      ADMIN: { email: 'admin@fitflex.hyd', password: 'admin123' }
+    }[role];
+
+    if (creds) {
+      try {
+        const res = await api.post('/auth/login', creds);
+        if (res.data?.token) {
+          localStorage.setItem('fitflex_token', res.data.token);
+        }
+      } catch (err) {
+        console.warn('Backend login fallback for demo account:', err);
+      }
+    }
+
     switchRole(role);
     setIsAuthModalOpen(false);
   };

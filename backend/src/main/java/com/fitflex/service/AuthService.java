@@ -42,7 +42,9 @@ public class AuthService {
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setPhone(request.getPhone());
-        user.setRole(request.getRole() != null ? request.getRole() : Role.ROLE_BUYER);
+        // Strictly prevent privilege escalation: self-registration only permits BUYER or SELLER
+        Role assignedRole = (request.getRole() == Role.ROLE_SELLER) ? Role.ROLE_SELLER : Role.ROLE_BUYER;
+        user.setRole(assignedRole);
         user.setLocality(request.getLocality() != null ? request.getLocality() : "Hyderabad Central");
         user.setAddress(request.getAddress());
         user = userRepository.save(user);

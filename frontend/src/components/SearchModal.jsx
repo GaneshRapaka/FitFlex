@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { Search, X, Flame, ArrowRight, MapPin } from 'lucide-react';
 import { INITIAL_PRODUCTS } from '../api/productsApi';
+import api from '../api/client';
 
 const POPULAR_SEARCHES = [
   'Oversized Pump Cover',
@@ -15,6 +16,19 @@ const POPULAR_SEARCHES = [
 const SearchModal = () => {
   const { isSearchOpen, setIsSearchOpen, setFilters, setQuickViewProduct } = useApp();
   const [searchTerm, setSearchTerm] = useState('');
+  const [catalogItems, setCatalogItems] = useState(INITIAL_PRODUCTS);
+
+  useEffect(() => {
+    if (isSearchOpen) {
+      api.get('/products')
+        .then(res => {
+          if (Array.isArray(res.data) && res.data.length > 0) {
+            setCatalogItems(res.data);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [isSearchOpen]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -34,11 +48,11 @@ const SearchModal = () => {
 
   const filteredResults = searchTerm.trim() === '' 
     ? [] 
-    : INITIAL_PRODUCTS.filter(p => 
+    : catalogItems.filter(p => 
         p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.fabricDetails.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.store.locality.toLowerCase().includes(searchTerm.toLowerCase())
+        p.category?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.fabricDetails?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.store?.locality?.toLowerCase().includes(searchTerm.toLowerCase())
       );
 
   const handleSelectProduct = (product) => {
