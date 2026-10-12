@@ -280,9 +280,8 @@ export const AppProvider = ({ children }) => {
 
   const isWishlisted = (productId) => wishlist.includes(productId);
 
-  // Order placement
+  // Order placement with real backend validation
   const placeOrder = async (checkoutData) => {
-    let backendOrder = null;
     try {
       const payload = {
         buyerName: checkoutData.buyerName || currentUser.name,
@@ -298,65 +297,63 @@ export const AppProvider = ({ children }) => {
         }))
       };
       const res = await api.post('/orders/checkout', payload);
-      if (res.data) {
-        backendOrder = res.data;
-      }
+      const backendOrder = res.data;
+
+      const newOrder = {
+        id: backendOrder.id,
+        orderNumber: backendOrder.orderNumber,
+        buyerName: backendOrder.buyerName || checkoutData.buyerName,
+        buyerPhone: backendOrder.buyerPhone || checkoutData.buyerPhone,
+        totalAmount: backendOrder.totalAmount || cartTotal,
+        subtotal: rawSubtotal,
+        discountAmount,
+        deliveryFee,
+        paymentMethod: backendOrder.paymentMethod || 'COD',
+        paymentStatus: backendOrder.paymentStatus || 'PENDING',
+        orderStatus: backendOrder.orderStatus || 'PLACED',
+        speed: checkoutData.speed || 'EXPRESS_SAME_DAY',
+        deliveryLocality: backendOrder.deliveryLocality || checkoutData.deliveryLocality,
+        deliveryAddress: backendOrder.deliveryAddress || checkoutData.deliveryAddress,
+        items: backendOrder.items?.length > 0 ? backendOrder.items.map(i => ({
+          id: i.id,
+          product: i.product,
+          size: i.size,
+          price: i.price,
+          quantity: i.quantity
+        })) : cart.map((ci, idx) => ({
+          id: idx + 1,
+          product: ci.product,
+          size: ci.selectedSize,
+          price: ci.product.price,
+          quantity: ci.quantity
+        })),
+        deliveryTracking: backendOrder.deliveryTracking || {
+          trackingCode: `HYD-EXP-${Date.now().toString().slice(-6)}`,
+          courierPartner: 'FitFlex Local Express (Hyderabad Fleet)',
+          currentStatus: 'SELLER_PROCESSING',
+          currentLocality: `${checkoutData.deliveryLocality || 'Banjara Hills'} Hub`,
+          estimatedDelivery: 'Within 24 Hours'
+        },
+        createdAt: backendOrder.createdAt || new Date().toISOString()
+      };
+
+      setOrders(prev => [newOrder, ...prev]);
+      clearCart();
+      setIsCheckoutOpen(false);
+      setTrackingOrder(newOrder);
+      showToast(`✅ Order Placed Successfully! Order #${newOrder.orderNumber}`);
+      return newOrder;
     } catch (err) {
-      console.warn('Backend order checkout fallback to local order tracking:', err);
+      const errorMsg = err.response?.data?.message || err.message || 'Checkout failed. Please check variant stock.';
+      showToast(`❌ ${errorMsg}`);
+      return null;
     }
-
-    const newOrderNumber = backendOrder?.orderNumber || `FF-HYD-${Math.floor(100000 + Math.random() * 900000)}`;
-    const newTrackingCode = backendOrder?.deliveryTracking?.trackingCode || `HYD-EXP-${Math.floor(100000 + Math.random() * 900000)}`;
-
-    const newOrder = {
-      id: backendOrder?.id || Date.now(),
-      orderNumber: newOrderNumber,
-      buyerName: checkoutData.buyerName || currentUser.name,
-      buyerPhone: checkoutData.buyerPhone || currentUser.phone,
-      totalAmount: cartTotal,
-      subtotal: rawSubtotal,
-      discountAmount,
-      deliveryFee,
-      paymentMethod: checkoutData.paymentMethod || 'COD',
-      paymentStatus: checkoutData.paymentMethod === 'UPI' ? 'PAID' : 'PENDING_DELIVERY',
-      orderStatus: 'PLACED',
-      speed: checkoutData.speed || 'EXPRESS_SAME_DAY',
-      deliveryLocality: checkoutData.deliveryLocality || 'Madhapur',
-      deliveryAddress: checkoutData.deliveryAddress,
-      deliveryNotes: checkoutData.deliveryNotes || '',
-      items: cart.map((ci, idx) => ({
-        id: idx + 1,
-        product: ci.product,
-        size: ci.selectedSize,
-        price: ci.product.price,
-        quantity: ci.quantity
-      })),
-      deliveryTracking: {
-        id: Date.now() + 1,
-        trackingCode: newTrackingCode,
-        courierPartner: 'FitFlex SwiftFleet Hyderabad',
-        deliveryAgentName: 'Syed Imran (Local Express)',
-        deliveryAgentPhone: '+91 98492 98765',
-        bikePlate: 'TS 09 FL 8812',
-        currentStatus: 'SELLER_PROCESSING',
-        currentLocality: `${checkoutData.deliveryLocality || 'Banjara Hills'} Hub`,
-        estimatedDelivery: checkoutData.speed === 'EXPRESS_SAME_DAY' 
-          ? 'Today within 3-4 Hours (Local Express)' 
-          : 'Tomorrow by 2:00 PM (Standard Local)'
-      },
-      createdAt: new Date().toISOString()
-    };
-
-    setOrders([newOrder, ...orders]);
-    clearCart();
-    setIsCheckoutOpen(false);
-    setTrackingOrder(newOrder);
-    showToast(`Order Placed Successfully! Order #${newOrderNumber}`);
-    return newOrder;
   };
 
   // Advance delivery status simulator (for demo / user test)
-  const advanceOrderStatus = (orderId) => {
+  const advanceOrderStatus = async (orderId) => {
+    let nextStatusToApi = null;
+
     setOrders(prevOrders => prevOrders.map(order => {
       if (order.id !== orderId) return order;
 
@@ -379,6 +376,8 @@ export const AppProvider = ({ children }) => {
         nextEstimate = 'Delivered & COD Payment Settled';
       }
 
+      nextStatusToApi = nextStatus;
+
       const updated = {
         ...order,
         orderStatus: nextStatus,
@@ -398,6 +397,14 @@ export const AppProvider = ({ children }) => {
       showToast(`Updated Delivery Status: ${nextStatus.replace(/_/g, ' ')}`);
       return updated;
     }));
+
+    if (orderId && nextStatusToApi) {
+      try {
+        await api.put(`/orders/${orderId}/status?status=${nextStatusToApi}`);
+      } catch {
+        // Graceful demo fallback
+      }
+    }
   };
 
   // Role switching with backend authentication sync

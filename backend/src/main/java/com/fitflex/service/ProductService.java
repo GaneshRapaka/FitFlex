@@ -120,4 +120,38 @@ public class ProductService {
         product.setActive(false);
         productRepository.save(product);
     }
+
+    @Transactional
+    public Product updateProduct(Long id, String callerEmail, ProductRequest request) {
+        Product product = getProductById(id);
+        User caller = userRepository.findByEmail(callerEmail)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + callerEmail));
+        boolean isOwner = product.getStore() != null && product.getStore().getSeller() != null
+                && product.getStore().getSeller().getEmail().equals(callerEmail);
+        boolean isAdmin = caller.getRole() == Role.ROLE_ADMIN;
+
+        if (!isOwner && !isAdmin) {
+            throw new org.springframework.security.access.AccessDeniedException("Unauthorized: You do not own this product.");
+        }
+
+        if (request.getName() != null) product.setName(request.getName());
+        if (request.getDescription() != null) product.setDescription(request.getDescription());
+        if (request.getPrice() != null) product.setPrice(request.getPrice());
+        if (request.getOriginalPrice() != null) product.setOriginalPrice(request.getOriginalPrice());
+        if (request.getDiscountPercent() != null) product.setDiscountPercent(request.getDiscountPercent());
+        if (request.getGender() != null) product.setGender(request.getGender());
+        if (request.getApparelImageUrl() != null) product.setApparelImageUrl(request.getApparelImageUrl());
+        if (request.getModelImageUrl() != null) product.setModelImageUrl(request.getModelImageUrl());
+        if (request.getFabricDetails() != null) product.setFabricDetails(request.getFabricDetails());
+        if (request.getFitType() != null) product.setFitType(request.getFitType());
+        if (request.getBadge() != null) product.setBadge(request.getBadge());
+
+        if (request.getCategorySlug() != null) {
+            Category category = categoryRepository.findBySlug(request.getCategorySlug())
+                    .orElse(product.getCategory());
+            product.setCategory(category);
+        }
+
+        return productRepository.save(product);
+    }
 }

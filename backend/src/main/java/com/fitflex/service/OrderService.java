@@ -50,114 +50,112 @@ public class OrderService {
             throw new IllegalArgumentException("Cart is empty");
         }
 
-        Store store = null;
-        BigDecimal totalAmount = BigDecimal.ZERO;
-        List<OrderItem> orderItemsToSave = new ArrayList<>();
-
-        String datePart = java.time.format.DateTimeFormatter.ofPattern("yyMMdd").format(java.time.LocalDate.now());
-        String orderEntropy = UUID.randomUUID().toString().replace("-", "").substring(0, 8).toUpperCase();
-
-        Order order = new Order();
-        order.setBuyer(buyer);
-        order.setOrderNumber("FF-HYD-" + datePart + "-" + orderEntropy);
-        order.setBuyerName(request.getBuyerName() != null ? request.getBuyerName() : buyer.getName());
-        order.setBuyerPhone(request.getBuyerPhone() != null ? request.getBuyerPhone() : buyer.getPhone());
-        order.setDeliveryAddress(request.getDeliveryAddress());
-        order.setDeliveryLocality(request.getDeliveryLocality() != null ? request.getDeliveryLocality() : "Madhapur");
-        order.setDeliveryPincode(request.getDeliveryPincode());
-        order.setDeliveryNotes(request.getDeliveryNotes());
-        order.setPaymentMethod("COD"); // Cash on Delivery
-        order.setPaymentStatus("PENDING");
-        order.setOrderStatus("PLACED");
+        record CheckoutItemDTO(Product product, String size, int quantity) {}
+        List<CheckoutItemDTO> itemsToProcess = new ArrayList<>();
 
         if (!cartItems.isEmpty()) {
             for (CartItem ci : cartItems) {
-                Store itemStore = ci.getProduct().getStore();
-                if (store == null) {
-                    store = itemStore;
-                } else if (itemStore != null && !store.getId().equals(itemStore.getId())) {
-                    throw new IllegalStateException("Hyper-local orders must be fulfilled from a single Hyderabad merchant hub. Please place separate orders for items from different stores.");
-                }
-                BigDecimal itemPrice = ci.getProduct().getPrice();
-                BigDecimal subTotal = itemPrice.multiply(BigDecimal.valueOf(ci.getQuantity()));
-                totalAmount = totalAmount.add(subTotal);
-
-                // Reduce inventory stock with pessimistic locking to prevent overselling race conditions
-                Optional<ProductVariant> variantOpt = variantRepository.findByProductIdAndSizeForUpdate(ci.getProduct().getId(), ci.getSelectedSize());
-                if (variantOpt.isPresent()) {
-                    ProductVariant v = variantOpt.get();
-                    if (v.getStockQuantity() < ci.getQuantity()) {
-                        throw new IllegalStateException("Insufficient stock for " + ci.getProduct().getName() + " (Size: " + ci.getSelectedSize() + "). Available: " + v.getStockQuantity());
-                    }
-                    v.setStockQuantity(v.getStockQuantity() - ci.getQuantity());
-                    variantRepository.save(v);
-                }
-
-                OrderItem oi = new OrderItem(order, ci.getProduct(), ci.getSelectedSize(), itemPrice, ci.getQuantity());
-                orderItemsToSave.add(oi);
+                itemsToProcess.add(new CheckoutItemDTO(ci.getProduct(), ci.getSelectedSize(), ci.getQuantity()));
             }
-            cartItemRepository.deleteByUserId(buyer.getId());
         } else {
             for (OrderCheckoutRequest.OrderItemCheckout itemReq : request.getItems()) {
                 Product product = productRepository.findById(itemReq.getProductId())
                         .orElseThrow(() -> new IllegalArgumentException("Product not found: " + itemReq.getProductId()));
-                Store itemStore = product.getStore();
-                if (store == null) {
-                    store = itemStore;
-                } else if (itemStore != null && !store.getId().equals(itemStore.getId())) {
-                    throw new IllegalStateException("Hyper-local orders must be fulfilled from a single Hyderabad merchant hub. Please place separate orders for items from different stores.");
-                }
-                BigDecimal itemPrice = product.getPrice();
-                BigDecimal subTotal = itemPrice.multiply(BigDecimal.valueOf(itemReq.getQuantity()));
-                totalAmount = totalAmount.add(subTotal);
-
-                Optional<ProductVariant> variantOpt = variantRepository.findByProductIdAndSizeForUpdate(product.getId(), itemReq.getSize());
-                if (variantOpt.isPresent()) {
-                    ProductVariant v = variantOpt.get();
-                    if (v.getStockQuantity() < itemReq.getQuantity()) {
-                        throw new IllegalStateException("Insufficient stock for " + product.getName() + " (Size: " + itemReq.getSize() + "). Available: " + v.getStockQuantity());
-                    }
-                    v.setStockQuantity(v.getStockQuantity() - itemReq.getQuantity());
-                    variantRepository.save(v);
-                }
-
-                OrderItem oi = new OrderItem(order, product, itemReq.getSize(), itemPrice, itemReq.getQuantity());
-                orderItemsToSave.add(oi);
+                itemsToProcess.add(new CheckoutItemDTO(product, itemReq.getSize(), itemReq.getQuantity()));
             }
         }
 
-        order.setStore(store);
-        order.setTotalAmount(totalAmount);
-        order = orderRepository.save(order);
-
-        for (OrderItem oi : orderItemsToSave) {
-            oi.setOrder(order);
-        }
-        orderItemRepository.saveAll(orderItemsToSave);
-        order.setItems(orderItemsToSave);
-
-        // Create Delivery Tracking with unique date-UUID entropy
-        String trackingEntropy = UUID.randomUUID().toString().replace("-", "").substring(0, 8).toUpperCase();
-        DeliveryTracking tracking = new DeliveryTracking();
-        tracking.setOrder(order);
-        tracking.setTrackingCode("HYD-EXP-" + datePart + "-" + trackingEntropy);
-        tracking.setCourierPartner("FitFlex Local Express (Hyderabad Fleet)");
-        tracking.setEstimatedDelivery(LocalDateTime.now().plusHours(24));
-        tracking.setCurrentStatus("SELLER_PROCESSING");
-        tracking.setCurrentLocality(store != null ? store.getLocality() + " Hub" : "Hyderabad Dispatch Hub");
-        deliveryTrackingRepository.save(tracking);
-        order.setDeliveryTracking(tracking);
-
-        // Create Seller Settlement Record
-        if (store != null) {
-            BigDecimal feePercent = BigDecimal.valueOf(0.085); // 8.5% platform fee
-            BigDecimal platformFee = totalAmount.multiply(feePercent).setScale(2, java.math.RoundingMode.HALF_UP);
-            BigDecimal netPayout = totalAmount.subtract(platformFee).setScale(2, java.math.RoundingMode.HALF_UP);
-            Settlement settlement = new Settlement(store, order, totalAmount, platformFee, netPayout);
-            settlementRepository.save(settlement);
+        // Group items by merchant store for automatic multi-vendor order splitting
+        Map<Store, List<CheckoutItemDTO>> storeItemsMap = new LinkedHashMap<>();
+        for (CheckoutItemDTO item : itemsToProcess) {
+            Store store = item.product().getStore();
+            storeItemsMap.computeIfAbsent(store, k -> new ArrayList<>()).add(item);
         }
 
-        return order;
+        String datePart = java.time.format.DateTimeFormatter.ofPattern("yyMMdd").format(java.time.LocalDate.now());
+        List<Order> createdOrders = new ArrayList<>();
+
+        for (Map.Entry<Store, List<CheckoutItemDTO>> entry : storeItemsMap.entrySet()) {
+            Store store = entry.getKey();
+            List<CheckoutItemDTO> storeItems = entry.getValue();
+
+            BigDecimal storeTotal = BigDecimal.ZERO;
+            List<OrderItem> orderItemsToSave = new ArrayList<>();
+
+            String orderEntropy = UUID.randomUUID().toString().replace("-", "").substring(0, 8).toUpperCase();
+            Order order = new Order();
+            order.setBuyer(buyer);
+            order.setStore(store);
+            order.setOrderNumber("FF-HYD-" + datePart + "-" + orderEntropy);
+            order.setBuyerName(request.getBuyerName() != null ? request.getBuyerName() : buyer.getName());
+            order.setBuyerPhone(request.getBuyerPhone() != null ? request.getBuyerPhone() : buyer.getPhone());
+            order.setDeliveryAddress(request.getDeliveryAddress());
+            order.setDeliveryLocality(request.getDeliveryLocality() != null ? request.getDeliveryLocality() : "Madhapur");
+            order.setDeliveryPincode(request.getDeliveryPincode());
+            order.setDeliveryNotes(request.getDeliveryNotes());
+            order.setPaymentMethod("COD");
+            order.setPaymentStatus("PENDING");
+            order.setOrderStatus("PLACED");
+
+            for (CheckoutItemDTO item : storeItems) {
+                Product product = item.product();
+                BigDecimal itemPrice = product.getPrice();
+                BigDecimal subTotal = itemPrice.multiply(BigDecimal.valueOf(item.quantity()));
+                storeTotal = storeTotal.add(subTotal);
+
+                // Concurrency control with pessimistic lock
+                Optional<ProductVariant> variantOpt = variantRepository.findByProductIdAndSizeForUpdate(product.getId(), item.size());
+                if (variantOpt.isPresent()) {
+                    ProductVariant v = variantOpt.get();
+                    if (v.getStockQuantity() < item.quantity()) {
+                        throw new IllegalStateException("Insufficient stock for " + product.getName() + " (Size: " + item.size() + "). Available: " + v.getStockQuantity());
+                    }
+                    v.setStockQuantity(v.getStockQuantity() - item.quantity());
+                    variantRepository.save(v);
+                }
+
+                OrderItem oi = new OrderItem(order, product, item.size(), itemPrice, item.quantity());
+                orderItemsToSave.add(oi);
+            }
+
+            order.setTotalAmount(storeTotal);
+            order = orderRepository.save(order);
+
+            for (OrderItem oi : orderItemsToSave) {
+                oi.setOrder(order);
+            }
+            orderItemRepository.saveAll(orderItemsToSave);
+            order.setItems(orderItemsToSave);
+
+            // Create Delivery Tracking for this store's shipment
+            String trackingEntropy = UUID.randomUUID().toString().replace("-", "").substring(0, 8).toUpperCase();
+            DeliveryTracking tracking = new DeliveryTracking();
+            tracking.setOrder(order);
+            tracking.setTrackingCode("HYD-EXP-" + datePart + "-" + trackingEntropy);
+            tracking.setCourierPartner("FitFlex Local Express (Hyderabad Fleet)");
+            tracking.setEstimatedDelivery(LocalDateTime.now().plusHours(24));
+            tracking.setCurrentStatus("SELLER_PROCESSING");
+            tracking.setCurrentLocality(store != null ? store.getLocality() + " Hub" : "Hyderabad Dispatch Hub");
+            deliveryTrackingRepository.save(tracking);
+            order.setDeliveryTracking(tracking);
+
+            // Create Seller Settlement Record
+            if (store != null) {
+                BigDecimal feePercent = BigDecimal.valueOf(0.085); // 8.5% platform fee
+                BigDecimal platformFee = storeTotal.multiply(feePercent).setScale(2, java.math.RoundingMode.HALF_UP);
+                BigDecimal netPayout = storeTotal.subtract(platformFee).setScale(2, java.math.RoundingMode.HALF_UP);
+                Settlement settlement = new Settlement(store, order, storeTotal, platformFee, netPayout);
+                settlementRepository.save(settlement);
+            }
+
+            createdOrders.add(order);
+        }
+
+        if (!cartItems.isEmpty()) {
+            cartItemRepository.deleteByUserId(buyer.getId());
+        }
+
+        return createdOrders.get(0);
     }
 
     public List<Order> getBuyerOrders(String buyerEmail) {

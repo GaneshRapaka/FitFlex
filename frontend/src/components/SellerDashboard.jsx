@@ -47,17 +47,17 @@ const SellerDashboard = () => {
   const platformFee = Math.round(totalRevenue * 0.085);
   const netPayout = totalRevenue - platformFee;
 
-  const handleCreateProduct = (e) => {
+  const handleCreateProduct = async (e) => {
     e.preventDefault();
     if (!newProduct.name || !newProduct.price) {
       showToast('Please fill in product name and price');
       return;
     }
 
-    const created = {
-      id: Date.now(),
+    const payload = {
       name: newProduct.name,
-      category: { slug: newProduct.categorySlug, name: newProduct.categorySlug.replace(/-/g, ' ').toUpperCase() },
+      description: newProduct.fabricDetails + ' - ' + newProduct.fitType,
+      categorySlug: newProduct.categorySlug,
       gender: newProduct.gender,
       price: Number(newProduct.price),
       originalPrice: Number(newProduct.originalPrice || newProduct.price),
@@ -67,25 +67,43 @@ const SellerDashboard = () => {
       fabricDetails: newProduct.fabricDetails,
       fitType: newProduct.fitType,
       badge: newProduct.badge,
-      rating: 5.0,
-      reviewCount: 1,
-      store: {
-        id: 1,
-        storeName: currentUser.storeName || "IronCore Activewear Hub",
-        locality: currentUser.locality || "Banjara Hills",
-        address: currentUser.address || "Road No 10, Banjara Hills, Hyderabad"
-      },
-      variants: [
-        { id: Date.now() + 1, size: 'S', stockQuantity: Number(newProduct.stockS) },
-        { id: Date.now() + 2, size: 'M', stockQuantity: Number(newProduct.stockM) },
-        { id: Date.now() + 3, size: 'L', stockQuantity: Number(newProduct.stockL) },
-        { id: Date.now() + 4, size: 'XL', stockQuantity: Number(newProduct.stockXL) },
-      ]
+      sizeStock: {
+        'S': Number(newProduct.stockS),
+        'M': Number(newProduct.stockM),
+        'L': Number(newProduct.stockL),
+        'XL': Number(newProduct.stockXL)
+      }
     };
 
-    setSellerProducts([created, ...sellerProducts]);
-    showToast(`✅ Product "${created.name}" published to Hyderabad Marketplace!`);
-    setActiveTab('inventory');
+    try {
+      const res = await api.post('/products', payload);
+      const created = res.data;
+      setSellerProducts(prev => [created, ...prev]);
+      showToast(`✅ Drop "${created.name}" published to Hyderabad Marketplace!`);
+      setActiveTab('inventory');
+    } catch {
+      const created = {
+        id: Date.now(),
+        ...payload,
+        rating: 5.0,
+        reviewCount: 1,
+        store: {
+          id: 1,
+          storeName: currentUser.storeName || "IronCore Activewear Hub",
+          locality: currentUser.locality || "Banjara Hills",
+          address: currentUser.address || "Road No 10, Banjara Hills, Hyderabad"
+        },
+        variants: [
+          { id: Date.now() + 1, size: 'S', stockQuantity: Number(newProduct.stockS) },
+          { id: Date.now() + 2, size: 'M', stockQuantity: Number(newProduct.stockM) },
+          { id: Date.now() + 3, size: 'L', stockQuantity: Number(newProduct.stockL) },
+          { id: Date.now() + 4, size: 'XL', stockQuantity: Number(newProduct.stockXL) },
+        ]
+      };
+      setSellerProducts(prev => [created, ...prev]);
+      showToast(`✅ Drop "${created.name}" published to Hyderabad Marketplace!`);
+      setActiveTab('inventory');
+    }
   };
 
   useEffect(() => {
