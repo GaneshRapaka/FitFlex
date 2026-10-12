@@ -176,6 +176,21 @@ export const AppProvider = ({ children }) => {
     localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(currentUser));
   }, [currentUser]);
 
+  // Auto-authenticate default demo session if no token exists
+  useEffect(() => {
+    if (!localStorage.getItem('fitflex_token')) {
+      const email = currentRole === 'SELLER' ? 'ironcore@fitflex.hyd' : (currentRole === 'ADMIN' ? 'admin@fitflex.hyd' : 'rahul@fitflex.hyd');
+      const password = currentRole === 'ADMIN' ? 'admin123' : 'password123';
+      api.post('/auth/login', { email, password })
+        .then(res => {
+          if (res.data?.token) {
+            localStorage.setItem('fitflex_token', res.data.token);
+          }
+        })
+        .catch(() => {});
+    }
+  }, []);
+
   // Toast notification
   const showToast = (msg) => {
     setToastMessage(msg);
@@ -385,18 +400,37 @@ export const AppProvider = ({ children }) => {
     }));
   };
 
-  // Role switching
-  const switchRole = (role) => {
+  // Role switching with backend authentication sync
+  const switchRole = async (role) => {
     setCurrentRole(role);
+    let targetUser = DEFAULT_BUYER;
+    let email = 'rahul@fitflex.hyd';
+    let password = 'password123';
+    let toast = 'Switched to FitFlex Buyer Marketplace';
+
     if (role === 'SELLER') {
-      setCurrentUser(DEFAULT_SELLER);
-      showToast('Switched to Seller Portal: IronCore Banjara Hills');
+      targetUser = DEFAULT_SELLER;
+      email = 'ironcore@fitflex.hyd';
+      password = 'password123';
+      toast = 'Switched to Seller Portal: IronCore Banjara Hills';
     } else if (role === 'ADMIN') {
-      setCurrentUser(DEFAULT_ADMIN);
-      showToast('Switched to Admin Operations HQ');
-    } else {
-      setCurrentUser(DEFAULT_BUYER);
-      showToast('Switched to FitFlex Buyer Marketplace');
+      targetUser = DEFAULT_ADMIN;
+      email = 'admin@fitflex.hyd';
+      password = 'admin123';
+      toast = 'Switched to Admin Operations HQ';
+    }
+
+    setCurrentUser(targetUser);
+    showToast(toast);
+
+    // Synchronize JWT token with backend demo account
+    try {
+      const res = await api.post('/auth/login', { email, password });
+      if (res.data?.token) {
+        localStorage.setItem('fitflex_token', res.data.token);
+      }
+    } catch (err) {
+      console.warn('Backend demo auth sync skipped:', err?.message);
     }
   };
 

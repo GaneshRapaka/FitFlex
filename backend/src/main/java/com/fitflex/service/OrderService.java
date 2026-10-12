@@ -54,9 +54,12 @@ public class OrderService {
         BigDecimal totalAmount = BigDecimal.ZERO;
         List<OrderItem> orderItemsToSave = new ArrayList<>();
 
+        String datePart = java.time.format.DateTimeFormatter.ofPattern("yyMMdd").format(java.time.LocalDate.now());
+        String orderEntropy = UUID.randomUUID().toString().replace("-", "").substring(0, 8).toUpperCase();
+
         Order order = new Order();
         order.setBuyer(buyer);
-        order.setOrderNumber("FF-HYD-" + (System.currentTimeMillis() % 10000000) + "-" + (1000 + new Random().nextInt(9000)));
+        order.setOrderNumber("FF-HYD-" + datePart + "-" + orderEntropy);
         order.setBuyerName(request.getBuyerName() != null ? request.getBuyerName() : buyer.getName());
         order.setBuyerPhone(request.getBuyerPhone() != null ? request.getBuyerPhone() : buyer.getPhone());
         order.setDeliveryAddress(request.getDeliveryAddress());
@@ -69,15 +72,18 @@ public class OrderService {
 
         if (!cartItems.isEmpty()) {
             for (CartItem ci : cartItems) {
+                Store itemStore = ci.getProduct().getStore();
                 if (store == null) {
-                    store = ci.getProduct().getStore();
+                    store = itemStore;
+                } else if (itemStore != null && !store.getId().equals(itemStore.getId())) {
+                    throw new IllegalStateException("Hyper-local orders must be fulfilled from a single Hyderabad merchant hub. Please place separate orders for items from different stores.");
                 }
                 BigDecimal itemPrice = ci.getProduct().getPrice();
                 BigDecimal subTotal = itemPrice.multiply(BigDecimal.valueOf(ci.getQuantity()));
                 totalAmount = totalAmount.add(subTotal);
 
-                // Reduce inventory stock with strict availability validation
-                Optional<ProductVariant> variantOpt = variantRepository.findByProductIdAndSize(ci.getProduct().getId(), ci.getSelectedSize());
+                // Reduce inventory stock with pessimistic locking to prevent overselling race conditions
+                Optional<ProductVariant> variantOpt = variantRepository.findByProductIdAndSizeForUpdate(ci.getProduct().getId(), ci.getSelectedSize());
                 if (variantOpt.isPresent()) {
                     ProductVariant v = variantOpt.get();
                     if (v.getStockQuantity() < ci.getQuantity()) {
@@ -95,14 +101,17 @@ public class OrderService {
             for (OrderCheckoutRequest.OrderItemCheckout itemReq : request.getItems()) {
                 Product product = productRepository.findById(itemReq.getProductId())
                         .orElseThrow(() -> new IllegalArgumentException("Product not found: " + itemReq.getProductId()));
+                Store itemStore = product.getStore();
                 if (store == null) {
-                    store = product.getStore();
+                    store = itemStore;
+                } else if (itemStore != null && !store.getId().equals(itemStore.getId())) {
+                    throw new IllegalStateException("Hyper-local orders must be fulfilled from a single Hyderabad merchant hub. Please place separate orders for items from different stores.");
                 }
                 BigDecimal itemPrice = product.getPrice();
                 BigDecimal subTotal = itemPrice.multiply(BigDecimal.valueOf(itemReq.getQuantity()));
                 totalAmount = totalAmount.add(subTotal);
 
-                Optional<ProductVariant> variantOpt = variantRepository.findByProductIdAndSize(product.getId(), itemReq.getSize());
+                Optional<ProductVariant> variantOpt = variantRepository.findByProductIdAndSizeForUpdate(product.getId(), itemReq.getSize());
                 if (variantOpt.isPresent()) {
                     ProductVariant v = variantOpt.get();
                     if (v.getStockQuantity() < itemReq.getQuantity()) {
@@ -127,10 +136,11 @@ public class OrderService {
         orderItemRepository.saveAll(orderItemsToSave);
         order.setItems(orderItemsToSave);
 
-        // Create Delivery Tracking
+        // Create Delivery Tracking with unique date-UUID entropy
+        String trackingEntropy = UUID.randomUUID().toString().replace("-", "").substring(0, 8).toUpperCase();
         DeliveryTracking tracking = new DeliveryTracking();
         tracking.setOrder(order);
-        tracking.setTrackingCode("HYD-EXP-" + (System.currentTimeMillis() % 10000000) + "-" + (1000 + new Random().nextInt(9000)));
+        tracking.setTrackingCode("HYD-EXP-" + datePart + "-" + trackingEntropy);
         tracking.setCourierPartner("FitFlex Local Express (Hyderabad Fleet)");
         tracking.setEstimatedDelivery(LocalDateTime.now().plusHours(24));
         tracking.setCurrentStatus("SELLER_PROCESSING");

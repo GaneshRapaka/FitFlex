@@ -35,6 +35,10 @@ public class SellerService {
     public Store getSellerStore(String sellerEmail) {
         User seller = userRepository.findByEmail(sellerEmail)
                 .orElseThrow(() -> new IllegalArgumentException("Seller not found"));
+        if (seller.getRole() == Role.ROLE_ADMIN) {
+            return storeRepository.findAll().stream().findFirst()
+                    .orElseThrow(() -> new IllegalArgumentException("No store configured"));
+        }
         return storeRepository.findBySeller(seller)
                 .orElseThrow(() -> new IllegalArgumentException("Store not found for seller"));
     }

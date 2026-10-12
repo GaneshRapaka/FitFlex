@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { INITIAL_PRODUCTS } from '../api/productsApi';
+import api from '../api/client';
 import { 
   PlusCircle, 
   Package, 
@@ -87,14 +88,30 @@ const SellerDashboard = () => {
     setActiveTab('inventory');
   };
 
+  useEffect(() => {
+    api.get('/products')
+      .then(res => {
+        if (Array.isArray(res.data) && res.data.length > 0) {
+          setSellerProducts(res.data);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   const handleUpdateStock = (productId, variantSize, delta) => {
+    let targetVariantId = null;
+    let targetQuantity = null;
+
     setSellerProducts(sellerProducts.map(p => {
       if (p.id === productId) {
         return {
           ...p,
           variants: p.variants.map(v => {
             if (v.size === variantSize) {
-              return { ...v, stockQuantity: Math.max(0, v.stockQuantity + delta) };
+              const updatedQty = Math.max(0, v.stockQuantity + delta);
+              targetVariantId = v.id;
+              targetQuantity = updatedQty;
+              return { ...v, stockQuantity: updatedQty };
             }
             return v;
           })
@@ -103,6 +120,11 @@ const SellerDashboard = () => {
       return p;
     }));
     showToast(`Stock updated for ${variantSize}`);
+
+    if (targetVariantId && targetQuantity !== null) {
+      api.put(`/seller/inventory/${targetVariantId}?quantity=${targetQuantity}`)
+        .catch(err => console.warn('Backend stock sync skipped:', err?.message));
+    }
   };
 
   const handleUpdateOrderStatus = (orderId, newStatus) => {
@@ -117,6 +139,9 @@ const SellerDashboard = () => {
       return o;
     }));
     showToast(`Order #${orderId} marked as ${newStatus}`);
+
+    api.put(`/orders/${orderId}/status?status=${newStatus}`)
+      .catch(err => console.warn('Backend order status sync skipped:', err?.message));
   };
 
   return (
